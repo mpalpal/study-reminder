@@ -9,6 +9,12 @@
   <meta name="theme-color" content="#ffffff" />
 </head>
 <body>
+  <!-- Splash Screen -->
+  <div id="splash">
+    <div class="splash-inner">
+      <h1 class="splash-title">Study Reminder</h1>
+    </div>
+  </div>
   <header class="topbar">
     <h1 class="app-title">Study Reminder</h1>
     <nav class="tabs">
@@ -44,9 +50,9 @@
       </div>
 
       <!-- 選択：0〜30日前（折りたたみ） -->
-      <details class="card" id="selectPanel" open>
+      <details class="card" id="selectPanel">
         <summary class="summary">
-          <span>〜30日前</span>
+          <span>▶︎過去の学習</span>
           <span class="muted" id="selectPanelHint"></span>
         </summary>
 
@@ -66,7 +72,7 @@
       <!-- 学習メモ（共通） -->
       <div class="card">
         <h3>学習メモ</h3>
-        <div id="reviewDetail" class="box muted">タイトルをタップで学習メモ表示</div>
+        <div id="reviewDetail" class="box muted">タイトル選択で学習メモ表示</div>
       </div>
     </section>
 

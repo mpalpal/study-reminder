@@ -266,7 +266,7 @@ function renderReview() {
 
   // 初期ガイド（メモはクリックで表示）
   reviewDetail.classList.add("muted");
-  reviewDetail.textContent = "タイトルをタップするとメモが表示";
+  reviewDetail.textContent = "タイトル選択でメモを表示";
 }
 
 if (offsetSelect) {
@@ -768,3 +768,11 @@ else renderReview();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/service-worker.js").catch(console.error);
 }
+
+// Splash screen (UI only)
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const splash = document.getElementById("splash");
+    if (splash) splash.classList.add("hide");
+  }, 1000);
+});
