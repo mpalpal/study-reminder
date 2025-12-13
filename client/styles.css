@@ -10,10 +10,10 @@ body { font-family: system-ui, -apple-system, sans-serif; margin: 0; }
 .card { border: 1px solid #ddd; border-radius: 14px; padding: 12px; margin: 12px 0; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .field { margin: 10px 0; }
-.label { font-size: 12px; color: #666; display: block; margin-bottom: 6px; }
+.label { font-size: 10px; color: #666; display: block; margin-bottom: 6px; }
 
-.input, .textarea, .select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
-.textarea { height: 140px; }
+.input, .textarea, .select { width: 97%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+.textarea { height: 100px; }
 .msg { font-size: 12px; color: #333; }
 .muted { color: #777; }
 .box { padding: 10px; border: 1px solid #eee; border-radius: 12px; background: #fafafa; }
@@ -30,3 +30,13 @@ button { padding: 10px 12px; border-radius: 10px; border: 1px solid #ddd; backgr
 .pre { margin: 0; white-space: pre-wrap; }
 .detail-title { font-weight: 700; margin-bottom: 6px; }
 .detail-meta { font-size: 12px; margin-bottom: 8px; }
+
+.calendar {display: grid;grid-template-columns: repeat(7, 1fr);gap: 8px;}
+.cal-head {font-size: 12px;color: #666;text-align: center;}
+.cal-day {border: 1px solid #ddd;background: #fff;border-radius: 12px;padding: 10px 0;text-align: center;cursor: pointer;}
+.cal-day.is-out {opacity: 0.35;}
+
+.cal-day.has-record {background: #ffd6e7; /* ピンク */border-color: #ffb3d1;}
+.cal-day.is-selected {outline: 2px solid #ff5fa2;}
+.cal-day .n {font-weight: 700;}
+

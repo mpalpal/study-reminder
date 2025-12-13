@@ -15,7 +15,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
   );
   self.skipWaiting();
-});
+});mou
 
 // 有効化：古いキャッシュを削除
 self.addEventListener("activate", (event) => {

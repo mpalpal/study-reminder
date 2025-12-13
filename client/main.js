@@ -119,6 +119,28 @@ const importFile = $("importFile");
 const wipeBtn = $("wipeBtn");
 const backupMsg = $("backupMsg");
 
+// history tab/page
+const tabHistory = $("tabHistory");
+const pageHistory = $("pageHistory");
+
+const calPrevBtn = $("calPrevBtn");
+const calNextBtn = $("calNextBtn");
+const calTodayBtn = $("calTodayBtn");
+const calMonthLabel = $("calMonthLabel");
+const calendarEl = $("calendar");
+
+const historyDateLabel = $("historyDateLabel");
+const historyList = $("historyList");
+const historyEmpty = $("historyEmpty");
+
+const historyEditingInfo = $("historyEditingInfo");
+const historyTitle = $("historyTitle");
+const historyBody = $("historyBody");
+const historySaveBtn = $("historySaveBtn");
+const historyCancelBtn = $("historyCancelBtn");
+const historyMsg = $("historyMsg");
+const historyAddBtn = $("historyAddBtn");
+
 // ===== Messages =====
 function setMsg(text) {
   if (!msgEl) return;
@@ -134,17 +156,30 @@ function setBackupMsg(text) {
 
 // ===== Routing (#review / #record) =====
 function setActiveTab(hash) {
-  const isReview = hash !== "#record";
+  const h = hash || "#review";
+  const isReview = h !== "#record" && h !== "#history";
+  const isRecord = h === "#record";
+  const isHistory = h === "#history";
+
   if (pageReview) pageReview.style.display = isReview ? "" : "none";
-  if (pageRecord) pageRecord.style.display = isReview ? "none" : "";
+  if (pageRecord) pageRecord.style.display = isRecord ? "" : "none";
+  if (pageHistory) pageHistory.style.display = isHistory ? "" : "none";
+
   if (tabReview) tabReview.classList.toggle("active", isReview);
-  if (tabRecord) tabRecord.classList.toggle("active", !isReview);
+  if (tabRecord) tabRecord.classList.toggle("active", isRecord);
+  if (tabHistory) tabHistory.classList.toggle("active", isHistory);
 }
 
 window.addEventListener("hashchange", () => {
   setActiveTab(location.hash);
-  if (location.hash === "#record") renderRecord();
-  else renderReview();
+
+  if (location.hash === "#record") {
+    renderRecord();
+  } else if (location.hash === "#history") {
+    renderHistoryPage();
+  } else {
+    renderReview();
+  }
 });
 
 // ===== Review page =====
@@ -180,10 +215,10 @@ function showReviewDetail(item, label) {
 }
 
 function labelFor(days, key) {
-  if (days === 0) return `今日（${key} / 0日前）`;
-  if (days === 1) return `昨日（${key} / 1日前）`;
-  if (days === 7) return `1週間前（${key} / 7日前）`;
-  if (days === 14) return `2週間前（${key} / 14日前）`;
+  if (days === 0) return `今日（${key}）`;
+  if (days === 1) return `昨日（${key}）`;
+  if (days === 7) return `1週間前（${key}）`;
+  if (days === 14) return `2週間前（${key}）`;
   return `${key}（${days}日前）`;
 }
 
@@ -199,10 +234,10 @@ function renderFixedBlock(days, headingEl, listEl, emptyEl) {
 
 function buildOffsetOptions() {
   offsetSelect.innerHTML = "";
-  for (let i = 0; i <= 14; i++) {
+  for (let i = 0; i <= 30; i++) {
     const opt = document.createElement("option");
     opt.value = String(i);
-    opt.textContent = i === 0 ? "今日（0日前）" : `${i}日前`;
+    opt.textContent = i === 0 ? "今日" : `${i}日前`;
     offsetSelect.appendChild(opt);
   }
   offsetSelect.value = "0";
@@ -229,9 +264,9 @@ function renderReview() {
   // 選択：0〜14日前
   renderSelectableBlock();
 
-  // 初期ガイド（内容はクリックで表示）
+  // 初期ガイド（メモはクリックで表示）
   reviewDetail.classList.add("muted");
-  reviewDetail.textContent = "タイトルをタップすると内容が表示されます";
+  reviewDetail.textContent = "タイトルをタップするとメモが表示";
 }
 
 if (offsetSelect) {
@@ -246,7 +281,7 @@ if (setToTodayBtn) {
 
 // ===== Record page (today) =====
 const TODAY = todayKey();
-if (todayLabel) todayLabel.textContent = `今日：${TODAY}`;
+if (todayLabel) todayLabel.textContent = `${TODAY}`;
 
 let editingId = null;
 
@@ -315,7 +350,7 @@ if (saveBtn) {
     const body = (bodyEl.value || "").trim();
 
     if (!title) { setMsg("タイトルは必須です"); return; }
-    if (!body) { setMsg("内容は必須です"); return; }
+    if (!body) { setMsg("学種メモは必須です"); return; }
 
     const now = Date.now();
     const existing = editingId ? getItems(TODAY).find(x => x.id === editingId) : null;
@@ -333,6 +368,284 @@ if (saveBtn) {
     renderReview();
     resetForm();
     setMsg("保存しました");
+  });
+}
+
+// ===== History page =====
+let calCursor = new Date(); // 表示中の月
+calCursor.setDate(1);
+calCursor.setHours(12,0,0,0);
+
+let selectedHistoryKey = null;
+let historyEditingId = null;
+
+function setHistoryMsg(t) {
+  if (!historyMsg) return;
+  historyMsg.textContent = t;
+  if (t) setTimeout(() => (historyMsg.textContent = ""), 2000);
+}
+
+function keyToParts(key) {
+  const [y,m,d] = key.split("-").map(Number);
+  return { y, m, d };
+}
+
+function formatMonthLabel(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+function dayKeyFromYMDay(y, m1, day) {
+  const d = new Date(y, m1 - 1, day);
+  d.setHours(12,0,0,0);
+  return formatDateKey(d);
+}
+
+function hasRecordFor(key) {
+  const items = getItems(key);
+  return items.some(it => (it.title || "").trim() || (it.body || "").trim());
+}
+
+function renderCalendar() {
+  if (!calendarEl) return;
+
+  calendarEl.innerHTML = "";
+
+  if (calMonthLabel) calMonthLabel.textContent = `表示中：${formatMonthLabel(calCursor)}`;
+
+  const week = ["日","月","火","水","木","金","土"];
+  for (const w of week) {
+    const div = document.createElement("div");
+    div.className = "cal-head";
+    div.textContent = w;
+    calendarEl.appendChild(div);
+  }
+
+  const first = new Date(calCursor);
+  const y = first.getFullYear();
+  const m0 = first.getMonth(); // 0-based
+  const startDow = first.getDay();
+
+  // その月の日数
+  const last = new Date(y, m0 + 1, 0);
+  const daysInMonth = last.getDate();
+
+  // 前月の末尾を埋める
+  const prevLast = new Date(y, m0, 0).getDate();
+  for (let i = 0; i < startDow; i++) {
+    const day = prevLast - (startDow - 1 - i);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cal-day is-out";
+    btn.innerHTML = `<span class="n">${day}</span>`;
+    // 前月のキー
+    const key = formatDateKey(new Date(y, m0 - 1, day, 12));
+    if (hasRecordFor(key)) btn.classList.add("has-record");
+    if (selectedHistoryKey === key) btn.classList.add("is-selected");
+    btn.addEventListener("click", () => selectHistoryDate(key));
+    calendarEl.appendChild(btn);
+  }
+
+  // 当月
+  for (let day = 1; day <= daysInMonth; day++) {
+    const key = formatDateKey(new Date(y, m0, day, 12));
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cal-day";
+    btn.innerHTML = `<span class="n">${day}</span>`;
+    if (hasRecordFor(key)) btn.classList.add("has-record");
+    if (selectedHistoryKey === key) btn.classList.add("is-selected");
+    btn.addEventListener("click", () => selectHistoryDate(key));
+    calendarEl.appendChild(btn);
+  }
+
+  // 翌月の頭を埋める（合計が 7の倍数になるまで）
+  const totalCells = calendarEl.children.length - 7; // ヘッダ7を除く
+  const rem = totalCells % 7;
+  const need = rem === 0 ? 0 : 7 - rem;
+
+  for (let day = 1; day <= need; day++) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "cal-day is-out";
+    btn.innerHTML = `<span class="n">${day}</span>`;
+    const key = formatDateKey(new Date(y, m0 + 1, day, 12));
+    if (hasRecordFor(key)) btn.classList.add("has-record");
+    if (selectedHistoryKey === key) btn.classList.add("is-selected");
+    btn.addEventListener("click", () => selectHistoryDate(key));
+    calendarEl.appendChild(btn);
+  }
+}
+
+function selectHistoryDate(key) {
+  selectedHistoryKey = key;
+  historyEditingId = null;
+  if (historyTitle) historyTitle.value = "";
+  if (historyBody) historyBody.value = "";
+  if (historyEditingInfo) historyEditingInfo.textContent = "タイトルを選ぶと編集できます";
+
+  renderCalendar();
+  renderHistoryList();
+}
+
+function renderHistoryList() {
+  if (!historyList || !historyEmpty || !historyDateLabel) return;
+
+  if (!selectedHistoryKey) {
+    historyDateLabel.textContent = "日付を選択してください";
+    historyList.innerHTML = "";
+    historyEmpty.style.display = "none";
+    return;
+  }
+
+  historyDateLabel.textContent = `${selectedHistoryKey} の記録`;
+  const items = getItems(selectedHistoryKey);
+
+  historyList.innerHTML = "";
+  historyEmpty.style.display = items.length ? "none" : "";
+
+  for (const it of items) {
+    const li = document.createElement("li");
+    li.className = "list-row";
+
+    const left = document.createElement("button");
+    left.type = "button";
+    left.className = "list-btn";
+    left.textContent = it.title || "(無題)";
+    left.addEventListener("click", () => {
+      historyEditingId = it.id;
+      historyTitle.value = it.title || "";
+      historyBody.value = it.body || "";
+      if (historyEditingInfo) historyEditingInfo.textContent = `編集中：${selectedHistoryKey}`;
+      setHistoryMsg("編集モード");
+    });
+
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "danger";
+    del.textContent = "削除";
+    del.addEventListener("click", () => {
+      if (!confirm("この記録を削除しますか？")) return;
+      deleteItem(selectedHistoryKey, it.id);
+      if (historyEditingId === it.id) {
+        historyEditingId = null;
+        historyTitle.value = "";
+        historyBody.value = "";
+      }
+      renderHistoryList();
+      renderCalendar();
+      renderReview();
+      if (selectedHistoryKey === TODAY) renderRecord();
+      setHistoryMsg("削除しました");
+    });
+
+    li.appendChild(left);
+    li.appendChild(del);
+    historyList.appendChild(li);
+  }
+}
+
+function renderHistoryPage() {
+  // 初回は今日を選択しておく（好みで null のままでもOK）
+  if (!selectedHistoryKey) selectedHistoryKey = TODAY;
+
+  renderCalendar();
+  renderHistoryList();
+}
+
+if (calPrevBtn) {
+  calPrevBtn.addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1, 12);
+    renderCalendar();
+  });
+}
+if (calNextBtn) {
+  calNextBtn.addEventListener("click", () => {
+    calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1, 12);
+    renderCalendar();
+  });
+}
+if (calTodayBtn) {
+  calTodayBtn.addEventListener("click", () => {
+    calCursor = new Date();
+    calCursor.setDate(1);
+    calCursor.setHours(12,0,0,0);
+    renderCalendar();
+  });
+}
+
+if (historySaveBtn) {
+  historySaveBtn.addEventListener("click", () => {
+    if (!selectedHistoryKey) { setHistoryMsg("日付を選んでください"); return; }
+    if (!historyEditingId) { setHistoryMsg("編集するタイトルを選んでください"); return; }
+
+    const title = (historyTitle.value || "").trim();
+    const body = (historyBody.value || "").trim();
+    if (!title) { setHistoryMsg("タイトルは必須です"); return; }
+    if (!body) { setHistoryMsg("学習メモは必須です"); return; }
+
+    const now = Date.now();
+    const existing = getItems(selectedHistoryKey).find(x => x.id === historyEditingId);
+    if (!existing) { setHistoryMsg("対象が見つかりません"); return; }
+
+    const updated = {
+      ...existing,
+      title,
+      body,
+      updatedAt: now,
+    };
+
+    upsertItem(selectedHistoryKey, updated);
+    setHistoryMsg("更新しました");
+    renderHistoryList();
+    renderCalendar();
+    renderReview();
+    if (selectedHistoryKey === TODAY) renderRecord();
+  });
+}
+
+if (historyCancelBtn) {
+  historyCancelBtn.addEventListener("click", () => {
+    historyEditingId = null;
+    if (historyTitle) historyTitle.value = "";
+    if (historyBody) historyBody.value = "";
+    if (historyEditingInfo) historyEditingInfo.textContent = "日付とタイトルを選ぶと編集できます";
+    setHistoryMsg("編集をやめました");
+  });
+}
+
+if (historyAddBtn) {
+  historyAddBtn.addEventListener("click", () => {
+    if (!selectedHistoryKey) { setHistoryMsg("日付を選んでください"); return; }
+
+    const title = (historyTitle.value || "").trim();
+    const body = (historyBody.value || "").trim();
+    if (!title) { setHistoryMsg("タイトルは必須です"); return; }
+    if (!body) { setHistoryMsg("学習メモは必須です"); return; }
+
+    const now = Date.now();
+    const item = {
+      id: uid(),
+      title,
+      body,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    upsertItem(selectedHistoryKey, item);
+    setHistoryMsg("追加しました");
+
+    // 画面更新
+    historyEditingId = null;
+    historyTitle.value = "";
+    historyBody.value = "";
+    if (historyEditingInfo) historyEditingInfo.textContent = `追加先：${selectedHistoryKey}`;
+
+    renderHistoryList();
+    renderCalendar();
+    renderReview();
+    if (selectedHistoryKey === TODAY) renderRecord();
   });
 }
 
@@ -448,6 +761,7 @@ if (offsetSelect) buildOffsetOptions();
 
 // 初回描画
 if (location.hash === "#record") renderRecord();
+else if (location.hash === "#history") renderHistoryPage();
 else renderReview();
 
 // Service Worker（キャッシュ用途のみ）
