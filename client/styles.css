@@ -31,7 +31,14 @@
 }
 
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
+html{
+  background: #061a2b;          /* ← 背景の最暗色で固定 */
+  overscroll-behavior-y: none;  /* ← 上下の白いバウンスを抑える */
+}
+
+body{
+  min-height: 100svh; /* iOSの表示領域に強い */
+}
 
 body{
   margin:0;
@@ -299,11 +306,14 @@ button:active{ transform: scale(.98); }
 }
 
 .danger{
-  background: rgba(255,77,109,.10);
-  border-color: rgba(255,77,109,.35);
-  color: #ffd3db;
+  background: rgba(255,77,109,.16);
+  border-color: rgba(255,77,109,.56);
+  color: rgba(255,230,235,.98);
 }
-.danger:hover{ border-color: rgba(255,77,109,.55); }
+.danger:hover{ 
+    border-color: rgba(255,77,109,.70); 
+    background: rgba(255,77,109,.22);
+}
 
 /* ===== Text helpers ===== */
 .msg{ font-size: 12px; color: rgba(255,255,255,.85); }
@@ -332,7 +342,8 @@ button:active{ transform: scale(.98); }
   padding: 12px 12px;
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.07);
+  background: rgba(255,255,255,.01);
+  border-color: rgba(255,255,255,.12);
   font-size: 14px;
   font-weight: 650;
 }
@@ -364,16 +375,26 @@ details.card{
   padding: 0;
 }
 details.card > summary{
-  padding: 14px;
+  padding: 10px;
 }
+
+/* details 内の本文エリアは「固定カード」と同じ余白にする */
+details.card > *:not(summary){
+  padding: 10px 10px;              /* 子にpaddingを入れない（固定cardと揃える） */
+}
+
 details.card[open] > summary{
   border-bottom: 1px solid rgba(255,255,255,.10);
 }
-details.card > *:not(summary){
-  padding: 14px;
-  padding-top: 10px;
-}
 
+/* details の中身を包む“疑似カード本文”として、summary以外の直下要素をまとめて調整 */
+details.card[open]{
+  padding: 10px;           /* 固定 .card と同じ */
+}
+details.card[open] > summary{
+  margin: -14px -14px 12px; /* summaryはカード上部として見せる */
+  padding: 14px;            /* 既存と同じ */
+}
 /* ===== Calendar ===== */
 .calendar{
   display:grid;
@@ -474,3 +495,109 @@ details.card > *:not(summary){
   }
 }
 
+/* インポートをボタンと同じ見た目にする */
+.file-btn{
+  position: relative;
+  display: inline-block;
+}
+
+/* 透明なinputをボタンの上に重ねる */
+.file-btn input[type="file"]{
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* 空状態（記録なし）を統一：固定表示と同じトーンにする */
+.empty-state{
+  padding: 10px 10px;
+  border-radius: 18px;
+  background: rgba(3, 12, 20, .34);
+  border: 1px solid rgba(255,255,255,.14);
+
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255,255,255,.82);
+}
+
+/* 右上の ? ボタン */
+.icon-btn{
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  padding: 0;
+}
+
+/* header内で右上に置く（必要なら） */
+.topbar{
+  position: sticky;
+}
+#helpBtn{
+  position: absolute;
+  right: 14px;
+  top: 12px;
+}
+
+/* モーダル */
+.modal{
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+.modal-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+}
+.modal-panel{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(920px, calc(100vw - 24px));
+  height: min(80vh, 720px);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(10, 25, 40, .78);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 25px 70px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+
+.modal-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.modal-title{
+  font-weight: 650;
+  letter-spacing: 0.03em;
+}
+
+.modal-body{
+  height: calc(100% - 52px);
+  background: rgba(255,255,255,.04);
+}
+
+/* Help image */
+.help-image-wrap{
+  height: 100%;
+  overflow: auto;          /* 縦長でもスクロールできる */
+  padding: 12px;
+}
+
+.help-image{
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 34px rgba(0,0,0,.35);
+}

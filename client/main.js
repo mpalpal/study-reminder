@@ -142,10 +142,14 @@ const historyMsg = $("historyMsg");
 const historyAddBtn = $("historyAddBtn");
 
 // ===== Messages =====
-function setMsg(text) {
+function setMsg(text, persist = false) {
   if (!msgEl) return;
   msgEl.textContent = text;
-  if (text) setTimeout(() => (msgEl.textContent = ""), 2000);
+
+  // 一時表示のときだけ自動で消す
+  if (text && !persist) {
+    setTimeout(() => (msgEl.textContent = ""), 2000);
+  }
 }
 
 function setBackupMsg(text) {
@@ -299,7 +303,7 @@ function startEdit(item) {
   bodyEl.value = item.body || "";
   cancelEditBtn.style.display = "";
   saveBtn.textContent = "更新";
-  setMsg("編集モード");
+  setMsg("編集モード", true);
   location.hash = "#record";
 }
 
@@ -379,10 +383,12 @@ calCursor.setHours(12,0,0,0);
 let selectedHistoryKey = null;
 let historyEditingId = null;
 
-function setHistoryMsg(t) {
+function setHistoryMsg(t, persist = false) {
   if (!historyMsg) return;
   historyMsg.textContent = t;
-  if (t) setTimeout(() => (historyMsg.textContent = ""), 2000);
+  if (t && !persist) {
+    setTimeout(() => (historyMsg.textContent = ""), 2000);
+  } 
 }
 
 function keyToParts(key) {
@@ -483,10 +489,11 @@ function selectHistoryDate(key) {
   historyEditingId = null;
   if (historyTitle) historyTitle.value = "";
   if (historyBody) historyBody.value = "";
-  if (historyEditingInfo) historyEditingInfo.textContent = "タイトルを選ぶと編集できます";
+  if (historyEditingInfo) historyEditingInfo.textContent = "日付とタイトルを選択して編集 / 日付を選択して追加";
 
   renderCalendar();
   renderHistoryList();
+  updateHistoryEditorUI();
 }
 
 function renderHistoryList() {
@@ -518,7 +525,8 @@ function renderHistoryList() {
       historyTitle.value = it.title || "";
       historyBody.value = it.body || "";
       if (historyEditingInfo) historyEditingInfo.textContent = `編集中：${selectedHistoryKey}`;
-      setHistoryMsg("編集モード");
+      setHistoryMsg("編集モード", true);
+      updateHistoryEditorUI();
     });
 
     const del = document.createElement("button");
@@ -552,6 +560,7 @@ function renderHistoryPage() {
 
   renderCalendar();
   renderHistoryList();
+  updateHistoryEditorUI();
 }
 
 if (calPrevBtn) {
@@ -597,21 +606,38 @@ if (historySaveBtn) {
     };
 
     upsertItem(selectedHistoryKey, updated);
-    setHistoryMsg("更新しました");
+    setHistoryMsg("保存しました");
     renderHistoryList();
     renderCalendar();
     renderReview();
     if (selectedHistoryKey === TODAY) renderRecord();
+
+    // 更新後は追加モードに戻す
+    historyEditingId = null;
+    if (historyTitle) historyTitle.value = "";
+    if (historyBody) historyBody.value = "";
+
+    // 状態表示も追加モードに
+    if (historyEditingInfo) historyEditingInfo.textContent = `追加先：${selectedHistoryKey}`;
+
+    // UI更新
+    updateHistoryEditorUI();
   });
 }
 
 if (historyCancelBtn) {
   historyCancelBtn.addEventListener("click", () => {
     historyEditingId = null;
+
     if (historyTitle) historyTitle.value = "";
     if (historyBody) historyBody.value = "";
-    if (historyEditingInfo) historyEditingInfo.textContent = "日付とタイトルを選ぶと編集できます";
-    setHistoryMsg("編集をやめました");
+
+    if (historyEditingInfo) {
+      historyEditingInfo.textContent = `追加先：${selectedHistoryKey}`;
+    }
+
+    setHistoryMsg("編集をキャンセルしました");
+    updateHistoryEditorUI();
   });
 }
 
@@ -646,7 +672,37 @@ if (historyAddBtn) {
     renderCalendar();
     renderReview();
     if (selectedHistoryKey === TODAY) renderRecord();
+    updateHistoryEditorUI();
   });
+}
+
+function updateHistoryEditorUI() {
+  // selectedHistoryKey がある＝日付選択済み
+  const hasDate = !!selectedHistoryKey;
+  // historyEditingId がある＝タイトル選択済み（編集モード）
+  const isEditing = !!historyEditingId;
+
+  // 日付未選択なら全部隠す（基本は今日が初期選択なのでここは通らない想定）
+  if (!hasDate) {
+    if (historyAddBtn) historyAddBtn.style.display = "none";
+    if (historySaveBtn) historySaveBtn.style.display = "none";
+    if (historyCancelBtn) historyCancelBtn.style.display = "none";
+    return;
+  }
+
+  if (!isEditing) {
+    // 日付だけ選択：追加だけ表示
+    if (historyAddBtn) historyAddBtn.style.display = "";
+    if (historySaveBtn) historySaveBtn.style.display = "none";
+    if (historyCancelBtn) historyCancelBtn.style.display = "none";
+    if (historyEditingInfo) historyEditingInfo.textContent = `追加先：${selectedHistoryKey}`;
+  } else {
+    // 編集モード：更新＋編集をやめる
+    if (historyAddBtn) historyAddBtn.style.display = "none";
+    if (historySaveBtn) historySaveBtn.style.display = "";
+    if (historyCancelBtn) historyCancelBtn.style.display = "";
+    if (historyEditingInfo) historyEditingInfo.textContent = `編集中：${selectedHistoryKey}`;
+  }
 }
 
 // ===== Init =====
@@ -775,4 +831,27 @@ window.addEventListener("load", () => {
     const splash = document.getElementById("splash");
     if (splash) splash.classList.add("hide");
   }, 1000);
+});
+
+// ===== Help (PDF) =====
+const helpBtn = document.getElementById("helpBtn");
+const helpModal = document.getElementById("helpModal");
+const helpClose = document.getElementById("helpClose");
+const helpBackdrop = document.getElementById("helpBackdrop");
+
+function openHelp() {
+  if (!helpModal) return;
+  helpModal.style.display = "block";
+}
+function closeHelp() {
+  if (!helpModal) return;
+  helpModal.style.display = "none";
+}
+
+if (helpBtn) helpBtn.addEventListener("click", openHelp);
+if (helpClose) helpClose.addEventListener("click", closeHelp);
+if (helpBackdrop) helpBackdrop.addEventListener("click", closeHelp);
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeHelp();
 });
