@@ -5,8 +5,7 @@ const ASSETS = [
   "/styles.css",
   "/main.js",
   "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/icons/icon340.jpeg"
 ];
 
 // インストール：必要ファイルをキャッシュ
