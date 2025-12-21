@@ -2,10 +2,16 @@
 
 ## 概要
 
-これは「毎日の学習を記録し、適切なタイミングで復讐できる」ことを目的とした**個人利用向けの学習管理Webアプリ(PWA)**です。
+これは「毎日の学習を記録し、適切なタイミングで復讐できる」ことを目的とした**個人利用向けの学習管理Webアプリ(PWA)**です。  
 エビングハウスの忘却曲線から発想を得ており、効率的な学習をサポートすることを期待しています。
 
-実際に iPhone / iPad /Mac Book で日常的に使うことを想定して設計・開発しました。
+実際に iPhone / iPad / MacBook で日常的に使うことを想定して設計・開発しました。
+
+Study Reminder is a **personal learning management web application (PWA)** designed to help users record daily learning activities and review them at optimal timings.
+
+The concept is inspired by **Ebbinghaus’ Forgetting Curve**, aiming to support efficient learning by encouraging review at appropriate intervals.
+
+This application is designed and developed for **daily use on iPhone / iPad / MacBook, with a focus on simplicity, usability, and offline availability.
 
 ---
 
@@ -23,8 +29,7 @@ Safari で URL を開き、**共有 → 「ホーム画面に追加」/「Dock�
 - 通知に依存せず、**朝と夜に自分で開く学習習慣**を作りたい
 - 広告や課金のない、**完全に個人データだけで完結するアプリ**にしたい
 
-これらを満たすため、  
-サーバーを使用しないクライアントサイド完結型設計を採用しました。
+これらを満たすため、サーバーを使用しないクライアントサイド完結型設計を採用しました。
 
 ---
 
@@ -62,8 +67,7 @@ Safari で URL を開き、**共有 → 「ホーム画面に追加」/「Dock�
 - Service Worker（オフライン対応）
 - Cloudflare Pages（デプロイ）
 
-※ フレームワークは使用せず、  
-DOM 操作・状態管理を JavaScript で実装しています。
+フレームワークは使用せず、DOM 操作・状態管理を JavaScript で実装しています。
 
 ---
 
@@ -104,4 +108,5 @@ cd study-reminder
 python3 -m http.server 5500
 
   
+
 
